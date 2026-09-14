@@ -7,7 +7,7 @@ on:
       - ".github/workflows/build-fixed-apk.yml"
 
 permissions:
-  contents: write 
+  contents: write
 
 jobs:
   build:
@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: actions/setup-java@v4
         with:
@@ -30,53 +32,5 @@ jobs:
 
           unzip -q Keys_Claws_Quest_for_Home_3D_Jungle_v2.2_Source.zip -d extracted
 
-          wrapper="$(find extracted -type f -name gradlew -print -quit)"
-          test -n "$wrapper"
-
-          project="$(dirname "$wrapper")"
-          echo "PROJECT_DIR=$project" >> "$GITHUB_ENV"
-
-          while IFS= read -r -d '' file; do
-            sed -E -i \
-              's#https://[A-Za-z0-9._-]+\.workers\.dev#https://keys-claws-online.rohit-singh2019.workers.dev#g' \
-              "$file"
-          done < <(
-            find "$project" -type f \
-              \( -name "*.kt" -o -name "*.java" -o -name "*.xml" \
-              -o -name "*.json" -o -name "*.js" -o -name "*.ts" \
-              -o -name "*.html" -o -name "*.properties" \
-              -o -name "*.gradle" -o -name "*.kts" \) -print0
-          )
-
-          grep -R -F \
-            "https://keys-claws-online.rohit-singh2019.workers.dev" \
-            "$project" >/dev/null
-
-      - name: Test and build APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "$PROJECT_DIR"
-          chmod +x gradlew
-          ./gradlew --no-daemon testDebugUnitTest assembleDebug
-
-      - name: Collect APK
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          apk="$(find "$PROJECT_DIR" -type f \
-            -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
-
-          test -n "$apk"
-          mkdir -p release
-
-          cp "$apk" \
-            release/Keys_Claws_Quest_for_Home_v2.3_fixed.apk
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Keys_Claws_Quest_for_Home_v2.3_fixed
-          path: release/Keys_Claws_Quest_for_Home_v2.3_fixed.apk
-          if-no-files-found: error
-          retention-days: 30
+          wrapper="$(find extracted -type f -name gradlew -print -quit
+
